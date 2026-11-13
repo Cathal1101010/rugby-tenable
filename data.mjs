@@ -1,3 +1,5 @@
+import {worldCupPlayers} from './players.mjs';
+
 const guide = 'https://resources.worldrugby-rims.pulselive.com/worldrugby/document/2025/12/01/e25075c4-f00c-4594-9448-1f8fc0c1cc31/RWC-2027-Draw-Media-Guide-EN.pdf';
 const archive = 'https://www.rugbyworldcup.com/2027/en/past-tournaments/';
 const allTime = [
@@ -37,5 +39,16 @@ export const puzzles = [
 ];
 // Add future quizzes here using YYYY-MM-DD UTC keys and the ranked helper above.
 export const datedPuzzles = new Map([
+  ['2026-11-14', {
+    question: 'Players wearing numbers 1 through 10 for Ireland against South Africa at the 2023 Rugby World Cup.',
+    context: 'Ireland vs South Africa · 23 September 2023',
+    source: 'https://www.rugbyworldcup.com/news/862453/rugby-world-cup-2023-south-africa-ireland-preview',
+    choices: worldCupPlayers,
+    aliases: {'johnny sexton':'Jonathan Sexton', 'jonathan sexton':'Jonathan Sexton'},
+    answers: [
+      'Andrew Porter', 'Ronan Kelleher', 'Tadhg Furlong', 'Tadhg Beirne', 'James Ryan',
+      "Peter O'Mahony", 'Josh Van Der Flier', 'Caelan Doris', 'Jamison Gibson-Park', 'Jonathan Sexton'
+    ].map((name,index)=>[name,index+1])
+  }],
 ]);
 

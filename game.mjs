@@ -11,14 +11,15 @@ export const puzzleFor = day => {
 };
 export const normalize = text => text.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const names = new Map(teams.map(team => [normalize(team), team]));
-export function identify(text) {
+export function identify(text, puzzle) {
   const key = normalize(text);
+  if (puzzle?.choices) return puzzle.choices.find(name => normalize(name) === key) ?? (Object.hasOwn(puzzle.aliases ?? {},key) ? puzzle.aliases[key] : undefined);
   return names.get(key) ?? (Object.hasOwn(aliases,key) ? aliases[key] : undefined);
 }
-export function suggestions(text) {
+export function suggestions(text, puzzle) {
   const query = normalize(text);
   if (query.replace(/[^a-z]/g,'').length < 2) return [];
-  return teams.filter(team => normalize(team).includes(query));
+  return (puzzle?.choices ?? teams).filter(team => normalize(team).includes(query));
 }
 export function resolveGuess(text, options, highlighted = -1) {
   return options[highlighted] ?? options[0] ?? text;
@@ -28,7 +29,7 @@ export const finished = game => game.correct.length === 10 || game.wrong.length 
 export function submit(game,puzzle,text) {
   if (finished(game)) return {kind:'finished',game};
   if (!normalize(text)) return {kind:'empty',game};
-  const team = identify(text);
+  const team = identify(text,puzzle);
   if (!team) return {kind:'unknown',game};
   const key = team;
   if (game.correct.includes(key) || game.wrong.includes(key)) return {kind:'duplicate',game,team};

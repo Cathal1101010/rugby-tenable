@@ -36,7 +36,7 @@ function closeSuggestions() {
 function showSuggestions() {
   closeSuggestions();
   if (finished(game)) return;
-  matches = suggestions(input.value);
+  matches = suggestions(input.value,puzzle);
   matches.forEach((name,index) => {
     const option = document.createElement('li');
     option.id = 'option-'+index;
@@ -69,7 +69,7 @@ function render(animatedRank = -1) {
     name.textContent = found || game.revealed ? team : '—';
     const stat = document.createElement('span');
     stat.className = 'value';
-    stat.textContent = found || game.revealed ? value+' '+puzzle.unit : '';
+    stat.textContent = found || game.revealed ? (puzzle.unit ? value+' '+puzzle.unit : '') : '';
     row.append(rank,name,stat);
     return row;
   }));
@@ -91,7 +91,7 @@ function sync() {
   game = load(storageKey+day);
   $('edition').textContent = 'Daily quiz  /  '+new Intl.DateTimeFormat('en-IE',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(day*dayLength);
   $('question').textContent = puzzle.question;
-  $('context').textContent = puzzle.context+' · Ties, including the cutoff, go alphabetically';
+  $('context').textContent = puzzle.context+(puzzle.choices ? '' : ' · Ties, including the cutoff, go alphabetically');
   $('share-copy').hidden = true;
   $('share-status').textContent = '';
   input.value = '';
@@ -110,7 +110,7 @@ function guess(text) {
   if (outcome.kind === 'empty') return;
   if (outcome.kind === 'finished') { render(); return; }
   if (outcome.kind === 'unknown') {
-    feedback.textContent = 'Choose a country or rugby team from the list.';
+    feedback.textContent = puzzle.choices ? 'Choose a player from the list.' : 'Choose a country or rugby team from the list.';
     return;
   }
   if (outcome.kind === 'duplicate') {
