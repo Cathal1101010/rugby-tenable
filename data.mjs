@@ -39,6 +39,26 @@ export const puzzles = [
 ];
 // Add future quizzes here using YYYY-MM-DD UTC keys and the ranked helper above.
 export const datedPuzzles = new Map([
+  ['2026-11-16', {
+    question: "The 10 most recent winners of the World Rugby Men's 15s Player of the Year award",
+    context: 'Each player appears once, on the year of their most recent win. Awards through 2025.',
+    source: 'https://www.world.rugby/tournaments/awards/past-winners/2025',
+    choices: worldCupPlayers.map(name => name === 'Jonathan Sexton' ? 'Johnny Sexton' : name),
+    aliases: {'jonathan sexton':'Johnny Sexton'},
+    answers: [
+      ['Malcolm Marx', 2025],
+      ['Pieter-Steph du Toit', 2024],
+      ['Ardie Savea', 2023],
+      ['Josh Van Der Flier', 2022],
+      ['Antoine Dupont', 2021],
+      ['Johnny Sexton', 2018],
+      ['Beauden Barrett', 2017],
+      ['Dan Carter', 2015],
+      ['Brodie Retallick', 2014],
+      ['Kieran Read', 2013],
+    ],
+  }],
+
   ['2026-11-14', {
     question: 'Players wearing numbers 1 through 10 for Ireland against South Africa at the 2023 Rugby World Cup.',
     context: 'Ireland vs South Africa · 23 September 2023',
