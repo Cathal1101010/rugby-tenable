@@ -5,6 +5,10 @@ const list = $('suggestions');
 const board = $('board');
 const feedback = $('feedback');
 let day, puzzle, game, matches = [], active = -1;
+let replayDay, month, busy = false;
+const launchDay = utcDay(Date.UTC(2026,10,13));
+const wait = ms => new Promise(resolve=>setTimeout(resolve,ms));
+const dateFormat = new Intl.DateTimeFormat('en-IE',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
 const memory = new Map();
 let storageAvailable = true;
 
@@ -17,6 +21,7 @@ function load(key) {
   return memory.get(key) ?? newGame();
 }
 function save() {
+  if (replayDay !== undefined) return;
   const key = storageKey+day;
   memory.set(key,game);
   try { localStorage.setItem(key,JSON.stringify(game)); }
@@ -76,6 +81,7 @@ function render(animatedRank = -1) {
   const ended = finished(game);
   $('guess-form').hidden = ended;
   $('result').hidden = !ended;
+  $('result-archive').hidden = !ended || !canReplay();
   $('result-title').textContent = score === 10 ? 'Perfect ten!' : 'Full time · '+score+'/10';
   $('reveal').hidden = game.revealed || score === 10;
   $('source').hidden = !game.revealed && score !== 10;
@@ -85,11 +91,16 @@ function render(animatedRank = -1) {
 }
 function sync() {
   const currentDay = utcDay();
-  if (currentDay === day) return false;
+  if (busy || replayDay !== undefined || currentDay === day) return false;
   day = currentDay;
-  puzzle = puzzleFor(day);
-  game = load(storageKey+day);
-  $('edition').textContent = 'Daily quiz  /  '+new Intl.DateTimeFormat('en-IE',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(day*dayLength);
+  showPuzzle(day,load(storageKey+day));
+  return true;
+}
+function showPuzzle(date,state) {
+  puzzle = puzzleFor(date);
+  game = state;
+  $('edition').textContent = (replayDay === undefined ? 'Daily quiz' : 'Archive replay')+'  /  '+dateFormat.format(date*dayLength);
+  $('return-daily').hidden = replayDay === undefined;
   $('question').textContent = puzzle.question;
   $('context').textContent = puzzle.context+(puzzle.choices ? '' : ' · Ties, including the cutoff, go alphabetically');
   $('share-copy').hidden = true;
@@ -98,14 +109,33 @@ function sync() {
   feedback.textContent = storageAvailable ? '' : 'Browser storage is unavailable. Progress lasts while this tab is open.';
   closeSuggestions();
   render();
-  return true;
 }
-function guess(text) {
+async function climb(rank) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  for (let index=board.children.length-1; index>=Math.max(rank,0); index--) {
+    const row = board.children[index];
+    row.classList.add('ladder-step');
+    row.scrollIntoView({block:'nearest'});
+    await wait(index === rank ? 180 : 100);
+    row.classList.remove('ladder-step');
+  }
+  if (rank < 0) {
+    const top = $('ladder-top');
+    top.hidden = false;
+    top.scrollIntoView({block:'nearest'});
+    await wait(250);
+    top.hidden = true;
+  }
+}
+async function guess(text) {
+  if (busy) return;
+  input.blur();
+  closeSuggestions();
   if (sync()) {
     feedback.textContent = 'A new puzzle is ready.';
     return;
   }
-  game = load(storageKey+day);
+  if (replayDay === undefined) game = load(storageKey+day);
   const outcome = submit(game,puzzle,text);
   if (outcome.kind === 'empty') return;
   if (outcome.kind === 'finished') { render(); return; }
@@ -117,16 +147,31 @@ function guess(text) {
     feedback.textContent = 'You already tried that guess.';
     return;
   }
-  game = outcome.game;
-  feedback.textContent = outcome.kind === 'correct'
-    ? outcome.team+' lands at number '+(outcome.rank+1)+'.'
-    : 'Outside the top ten. '+(3-game.wrong.length)+' lives left.';
-  save();
-  input.value = '';
-  closeSuggestions();
-  render(outcome.rank);
-  if (finished(game)) openStats();
-  else input.focus();
+  busy = true;
+  const controls = [input,$('guess-form').querySelector('button'),$('show-stats'),$('show-help'),$('return-daily')];
+  controls.forEach(control=>control.disabled = true);
+  try {
+    input.value = '';
+    feedback.textContent = 'Checking '+text+'…';
+    await climb(outcome.rank ?? -1);
+    game = outcome.game;
+    feedback.textContent = outcome.kind === 'correct'
+      ? outcome.team+' lands at number '+(outcome.rank+1)+'.'
+      : 'Outside the top ten. '+(3-game.wrong.length)+' lives left.';
+    save();
+    render(outcome.rank);
+    if (finished(game)) {
+      const notice = $('game-outcome');
+      notice.classList.toggle('win',game.correct.length === 10);
+      notice.textContent = game.correct.length === 10 ? 'You win!' : 'Hard luck, you lose';
+      await wait(1250);
+      notice.textContent = '';
+      openStats();
+    }
+  } finally {
+    busy = false;
+    controls.forEach(control=>control.disabled = false);
+  }
 }
 function renderStats() {
   const keys = new Set(memory.keys());
@@ -134,7 +179,7 @@ function renderStats() {
     for (let i=0;i<localStorage.length;i++) keys.add(localStorage.key(i));
   } catch { storageAvailable = false; }
   const records = [...keys].filter(key=>key?.startsWith(storageKey)).map(key=>[Number(key.slice(storageKey.length)),load(key)]);
-  const {played,streak,distribution} = statsFor(records,day);
+  const {played,streak,distribution} = statsFor(records,utcDay());
   $('played').textContent = played;
   $('streak').textContent = streak;
   const max = Math.max(1,...distribution);
@@ -152,6 +197,9 @@ $('guess-form').addEventListener('submit',event=>{
   event.preventDefault();
   guess(resolveGuess(input.value,matches,active));
 });
+$('guess-form').querySelector('button').addEventListener('pointerdown',event=>{
+  if (document.activeElement === input) event.preventDefault();
+});
 input.addEventListener('input',showSuggestions);
 input.addEventListener('focus',showSuggestions);
 input.addEventListener('blur',closeSuggestions);
@@ -167,8 +215,8 @@ input.addEventListener('keydown',event=>{
   list.children[active].scrollIntoView({block:'nearest'});
 });
 $('reveal').addEventListener('click',()=>{
-  if (sync()) return;
-  game = load(storageKey+day);
+  if (busy || sync()) return;
+  if (replayDay === undefined) game = load(storageKey+day);
   if (!finished(game)) return;
   game = {...game,revealed:true};
   save();
@@ -176,9 +224,9 @@ $('reveal').addEventListener('click',()=>{
   $('share').focus();
 });
 $('share').addEventListener('click',async()=>{
-  if (sync() || !finished(game)) return;
+  if (busy || sync() || !finished(game)) return;
   const url = location.protocol.startsWith('http') ? new URL('./',location.href).href : '';
-  const text = shareText(game,puzzle,day,url);
+  const text = shareText(game,puzzle,replayDay ?? day,url);
   try {
     if (navigator.share) { await navigator.share({text}); return; }
     if (navigator.clipboard) {
@@ -195,6 +243,7 @@ $('share').addEventListener('click',async()=>{
   $('share-status').textContent = 'Copy the selected result to share it.';
 });
 function openStats() {
+  $('stats-archive').hidden = !canReplay();
   renderStats();
   if (!$('stats').open) $('stats').showModal();
 }
@@ -203,11 +252,15 @@ $('stats').addEventListener('click',event=>{
   if (!event.target.closest('button')) $('stats').close();
 });
 $('stats').addEventListener('close',()=>{
-  if (finished(game)) $('result-title').focus();
+  if (finished(game) && !$('archive').open) $('result-title').focus();
 });
 $('show-help').addEventListener('click',()=>$('help').showModal());
 window.addEventListener('storage',event=>{
-  if (sync()) return;
+  if (busy || sync()) return;
+  if (replayDay !== undefined) {
+    if ($('stats').open) renderStats();
+    return;
+  }
   if (event.key === storageKey+day || event.key === null) {
     const wasFinished = finished(game);
     game = load(storageKey+day);
@@ -218,10 +271,68 @@ window.addEventListener('storage',event=>{
 });
 function tick() {
   sync();
-  const seconds = Math.max(0,Math.ceil(((day+1)*dayLength-Date.now())/1000));
+  const seconds = Math.max(0,Math.ceil(((utcDay()+1)*dayLength-Date.now())/1000));
   const clock = [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(n=>String(n).padStart(2,'0')).join(':');
   $('countdown').textContent = 'Next puzzle in '+clock+' · midnight UTC';
 }
+function canReplay() {
+  return utcDay() > launchDay && finished(load(storageKey+utcDay()));
+}
+function monthStart(value,offset = 0) {
+  const date = new Date(value*dayLength);
+  return utcDay(Date.UTC(date.getUTCFullYear(),date.getUTCMonth()+offset,1));
+}
+function renderCalendar() {
+  const today = utcDay();
+  const next = monthStart(month,1);
+  $('month-label').textContent = new Intl.DateTimeFormat('en-IE',{month:'long',year:'numeric',timeZone:'UTC'}).format(month*dayLength);
+  $('previous-month').disabled = month <= monthStart(launchDay);
+  $('next-month').disabled = next >= today;
+  const calendar = $('calendar');
+  calendar.replaceChildren();
+  for (const label of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']) {
+    const cell = document.createElement('span');
+    cell.textContent = label;
+    calendar.append(cell);
+  }
+  const offset = (new Date(month*dayLength).getUTCDay()+6)%7;
+  for (let i=0;i<offset;i++) calendar.append(document.createElement('span'));
+  for (let date=month;date<next;date++) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = date-month+1;
+    button.setAttribute('aria-label',dateFormat.format(date*dayLength));
+    button.disabled = date < launchDay || date >= today;
+    button.addEventListener('click',()=>{
+      replayDay = date;
+      $('archive').close();
+      showPuzzle(date,newGame());
+      $('question').scrollIntoView({block:'start'});
+    });
+    calendar.append(button);
+  }
+}
+function openArchive() {
+  if (busy || !canReplay()) return;
+  month = monthStart(utcDay()-1);
+  renderCalendar();
+  $('stats').close();
+  $('archive').showModal();
+}
+$('stats-archive').addEventListener('click',openArchive);
+$('result-archive').addEventListener('click',openArchive);
+for (const [id,offset] of [['previous-month',-1],['next-month',1]]) {
+  $(id).addEventListener('click',()=>{
+    month = monthStart(month,offset);
+    renderCalendar();
+  });
+}
+$('return-daily').addEventListener('click',()=>{
+  replayDay = undefined;
+  day = undefined;
+  tick();
+  $('question').scrollIntoView({block:'start'});
+});
 window.addEventListener('focus',tick);
 document.addEventListener('visibilitychange',tick);
 tick();
