@@ -116,16 +116,24 @@ async function climb(rank) {
     const row = board.children[index];
     row.classList.add('ladder-step');
     row.scrollIntoView({block:'nearest'});
-    await wait(index === rank ? 180 : 100);
+    await wait(index === rank ? 340 : 230);
     row.classList.remove('ladder-step');
   }
   if (rank < 0) {
     const top = $('ladder-top');
     top.hidden = false;
     top.scrollIntoView({block:'nearest'});
-    await wait(250);
+    await wait(350);
     top.hidden = true;
   }
+}
+async function showNotice(message,duration,{win = false, guess = false} = {}) {
+  const notice = $('game-outcome');
+  notice.classList.toggle('win',win);
+  notice.classList.toggle('guess-notice',guess);
+  notice.textContent = message;
+  await wait(duration);
+  notice.textContent = '';
 }
 async function guess(text) {
   if (busy) return;
@@ -143,29 +151,30 @@ async function guess(text) {
     feedback.textContent = puzzle.choices ? 'Choose a player from the list.' : 'Choose a country or rugby team from the list.';
     return;
   }
-  if (outcome.kind === 'duplicate') {
-    feedback.textContent = 'You already tried that guess.';
-    return;
-  }
   busy = true;
   const controls = [input,$('guess-form').querySelector('button'),$('show-stats'),$('show-help'),$('return-daily')];
   controls.forEach(control=>control.disabled = true);
   try {
     input.value = '';
+    if (outcome.kind === 'duplicate') {
+      feedback.textContent = 'You already guessed '+outcome.team+'.';
+      await showNotice(feedback.textContent,1700,{guess:true});
+      return;
+    }
     feedback.textContent = 'Checking '+text+'…';
     await climb(outcome.rank ?? -1);
     game = outcome.game;
     feedback.textContent = outcome.kind === 'correct'
       ? outcome.team+' lands at number '+(outcome.rank+1)+'.'
-      : 'Outside the top ten. '+(3-game.wrong.length)+' lives left.';
+      : text+' is not on the list. '+(3-game.wrong.length)+' lives left.';
     save();
     render(outcome.rank);
+    if (outcome.kind === 'wrong') {
+      await showNotice(text+' is not on the list',2000,{guess:true});
+    }
     if (finished(game)) {
-      const notice = $('game-outcome');
-      notice.classList.toggle('win',game.correct.length === 10);
-      notice.textContent = game.correct.length === 10 ? 'You win!' : 'Hard luck, you lose';
-      await wait(1250);
-      notice.textContent = '';
+      const won = game.correct.length === 10;
+      await showNotice(won ? 'You win!' : 'Hard luck, you lose',1250,{win:won});
       openStats();
     }
   } finally {
