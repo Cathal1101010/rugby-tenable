@@ -39,6 +39,27 @@ export const puzzles = [
 ];
 // Add future quizzes here using YYYY-MM-DD UTC keys and the ranked helper above.
 export const datedPuzzles = new Map([
+  ['2026-11-23', {
+    id: 'ireland-sa-ratings-2026-11-21',
+    question: 'Irish players to receive a score of 8/10 or higher against South Africa on November 21st 2026, based on The Irish Times Player Ratings',
+    context: 'Ranked by rating, highest first. Ties are ordered by ascending shirt number. Only starters qualify; players omitted either did not start or were rated 7/10 or lower.',
+    source: 'https://www.irishtimes.com/sport/rugby/2026/11/21/ireland-player-ratings-v-south-africa-rob-baloucoune-puts-in-stunning-display/',
+    choices: worldCupPlayers,
+    aliases: {'robert balacoune':'Robert Baloucoune', 'jamison gibson park':'Jamison Gibson-Park'},
+    unit: '/10',
+    answers: [
+      ["Ronan Kelleher", 9],
+      ["Robert Baloucoune", 9],
+      ["Tadhg Furlong", 8],
+      ["Joe McCarthy", 8],
+      ["Ryan Baird", 8],
+      ["Josh Van Der Flier", 8],
+      ["Dan Sheehan", 8],
+      ["Jamison Gibson-Park", 8],
+      ["Mack Hansen", 8],
+      ["Stuart McCloskey", 8],
+    ],
+  }],
   ['2026-11-16', {
     question: "The 10 most recent winners of the World Rugby Men's 15s Player of the Year award",
     context: 'Each player appears once, on the year of their most recent win. Awards through 2025.',

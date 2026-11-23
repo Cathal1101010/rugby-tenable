@@ -14,15 +14,22 @@ let storageAvailable = true;
 
 function load(key) {
   try {
-    if (storageAvailable) return JSON.parse(localStorage.getItem(key)) ?? newGame();
+    if (storageAvailable) return validateSavedGame(key,JSON.parse(localStorage.getItem(key)) ?? newGame());
   } catch {
     storageAvailable = false;
   }
-  return memory.get(key) ?? newGame();
+  return validateSavedGame(key,memory.get(key) ?? newGame());
+}
+function validateSavedGame(key,state) {
+  const savedDay = Number(key.slice(storageKey.length));
+  if (!Number.isInteger(savedDay)) return newGame();
+  const savedPuzzle = puzzleFor(savedDay);
+  return savedPuzzle.id && state.puzzleId !== savedPuzzle.id ? newGame() : state;
 }
 function save() {
   if (replayDay !== undefined) return;
   const key = storageKey+day;
+  if (puzzle.id) game = {...game,puzzleId:puzzle.id};
   memory.set(key,game);
   try { localStorage.setItem(key,JSON.stringify(game)); }
   catch {
