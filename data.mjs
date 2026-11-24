@@ -1,3 +1,4 @@
+import {teams, aliases as countryAliases} from './places.mjs';
 import {worldCupPlayers} from './players.mjs';
 
 const guide = 'https://resources.worldrugby-rims.pulselive.com/worldrugby/document/2025/12/01/e25075c4-f00c-4594-9448-1f8fc0c1cc31/RWC-2027-Draw-Media-Guide-EN.pdf';
@@ -39,6 +40,20 @@ export const puzzles = [
 ];
 // Add future quizzes here using YYYY-MM-DD UTC keys and the ranked helper above.
 export const datedPuzzles = new Map([
+  ['2026-11-25', {
+    id: 'world-rankings-11-20-2026-11-25',
+    question: 'The Countries Currently Ranked 11 - 20 in the World Rugby Official Rankings',
+    context: 'Men’s rugby union rankings, as published on 23 November 2026. Listed from 11th to 20th.',
+    source: 'https://www.world.rugby/rankings',
+    choices: teams.map(name => name === 'United States' ? 'USA' : name),
+    aliases: Object.fromEntries(Object.entries({...countryAliases, 'united states':'USA'}).map(([key,value])=>[key,value === 'United States' ? 'USA' : value])),
+    showDetails: true,
+    answers: [
+      ['Japan','11th'], ['Italy','12th'], ['Georgia','13th'], ['Samoa','14th'],
+      ['Portugal','15th'], ['USA','16th'], ['Chile','17th'], ['Tonga','18th'],
+      ['Spain','19th'], ['Uruguay','20th'],
+    ],
+  }],
   ['2026-11-24', {
     id: 'ireland-recent-number-tens-2026-11-24',
     question: 'The most recent players to wear the number 10 shirt for Ireland',
