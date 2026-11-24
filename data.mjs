@@ -40,6 +40,26 @@ export const puzzles = [
 ];
 // Add future quizzes here using YYYY-MM-DD UTC keys and the ranked helper above.
 export const datedPuzzles = new Map([
+    ['2026-11-26', {
+    id: 'highest-paid-rugby-2026-11-26',
+    question: 'The Current Top 10 Highest Paid Rugby Players in the World',
+    context: 'Based on RugbyLAD’s reported annual salary ranking, published 6 August 2026. Salaries are estimates; tied salaries follow the source’s order.',
+    source: 'https://rugbylad.ie/top-10-highest-paid-rugby-players/',
+    choices: worldCupPlayers,
+    showDetails: true,
+    answers: [
+      ['Antoine Dupont', 'Toulouse / France'],
+      ['Finn Russell', 'Bath / Scotland'],
+      ['Romain Ntamack', 'Toulouse / France'],
+      ['Damian de Allende', 'Saitama Wild Knights / South Africa'],
+      ['Maro Itoje', 'Saracens / England'],
+      ['Malcolm Marx', 'Kubota Spears / South Africa'],
+      ['Eben Etzebeth', 'Hollywoodbets Sharks / South Africa'],
+      ['Pieter-Steph du Toit', 'Toyota Verblitz / South Africa'],
+      ['Jesse Kriel', 'Canon Eagles / South Africa'],
+      ['Handré Pollard', 'Vodacom Bulls / South Africa'],
+    ],
+  }],
   ['2026-11-25', {
     id: 'world-rankings-11-20-2026-11-25',
     question: 'The Countries Currently Ranked 11 - 20 in the World Rugby Official Rankings',
