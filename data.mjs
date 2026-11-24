@@ -39,6 +39,57 @@ export const puzzles = [
 ];
 // Add future quizzes here using YYYY-MM-DD UTC keys and the ranked helper above.
 export const datedPuzzles = new Map([
+  ['2026-11-24', {
+    id: 'ireland-recent-number-tens-2026-11-24',
+    question: 'The most recent players to wear the number 10 shirt for Ireland',
+    context: 'Senior men’s Test starts only. Each player appears once, ordered by their most recent start in the number 10 shirt, as of 24 November 2026.',
+    source: 'https://en.rugby-japan.jp/schedule/starting/29969/18640/',
+    choices: worldCupPlayers,
+    aliases: {'johnny sexton':'Jonathan Sexton'},
+    showDetails: true,
+    answers: [
+      [
+            "Sam Prendergast",
+            "vs South Africa 2026"
+      ],
+      [
+            "Ciarán Frawley",
+            "vs Japan 2026"
+      ],
+      [
+            "Jack Crowley",
+            "vs Scotland 2026"
+      ],
+      [
+            "Jonathan Sexton",
+            "vs New Zealand 2023"
+      ],
+      [
+            "Ross Byrne",
+            "vs England 2023"
+      ],
+      [
+            "Joey Carbery",
+            "vs Fiji 2022"
+      ],
+      [
+            "Billy Burns",
+            "vs France 2021"
+      ],
+      [
+            "Jack Carty",
+            "vs Japan 2019"
+      ],
+      [
+            "Paddy Jackson",
+            "vs Japan 2017"
+      ],
+      [
+            "Ian Madigan",
+            "vs Argentina 2015"
+      ]
+]
+  }],
   ['2026-11-23', {
     id: 'ireland-sa-ratings-2026-11-21',
     question: 'Irish players to receive a score of 8/10 or higher against South Africa on November 21st 2026, based on The Irish Times Player Ratings',

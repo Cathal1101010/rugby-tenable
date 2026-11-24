@@ -81,7 +81,7 @@ function render(animatedRank = -1) {
     name.textContent = found || game.revealed ? team : '—';
     const stat = document.createElement('span');
     stat.className = 'value';
-    stat.textContent = found || game.revealed ? (puzzle.unit ? value+' '+puzzle.unit : '') : '';
+    stat.textContent = found || game.revealed ? (puzzle.showDetails ? value : puzzle.unit ? value+' '+puzzle.unit : '') : '';
     row.append(rank,name,stat);
     return row;
   }));
